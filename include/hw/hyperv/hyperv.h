@@ -86,22 +86,35 @@ uint16_t hyperv_hcall_post_message(uint64_t param, bool fast);
  */
 uint16_t hyperv_hcall_signal_event(uint64_t param, bool fast);
 
+/* TODO: Figure out correct header for these.*/
+#define X86_APIC_ID_MASK_WIDTH 4
+#define X86_APIC_ID_MASK_SHIFT (32 - X86_APIC_ID_MASK_WIDTH)
+#define X86_APIC_ID_MASK  0xFFFFFFFF >> X86_APIC_ID_MASK_WIDTH
+
 static inline uint32_t hyperv_vp_index(CPUState *cs)
 {
-    return cs->cpu_index;
+    return cs->cc->get_arch_id(cs) & X86_APIC_ID_MASK;
 }
 
 static int hyperv_vsm_vp_index(CPUState *cs)
 {
-    return 0;
+    return hyperv_vp_index(cs);
+}
+
+static inline int64_t generate_apic_id(uint32_t vp_index, uint32_t vtl)
+{
+	uint32_t apic_id = vp_index | (vtl << X86_APIC_ID_MASK_SHIFT);
+	return apic_id;
 }
 
 static CPUState *hyperv_vsm_vcpu(uint32_t vp_index, uint32_t vtl)
 {
-    CPUState *cs = qemu_get_cpu(vtl);
-    assert(hyperv_vp_index(cs) == vtl);
+    CPUState *cs = cpu_by_arch_id(generate_apic_id(vp_index, vtl));
+    assert(cs);
+    assert(hyperv_vsm_vp_index(cs) == vp_index);
     return cs;
 }
+
 
 void hyperv_synic_add(CPUState *cs);
 void hyperv_synic_reset(CPUState *cs);

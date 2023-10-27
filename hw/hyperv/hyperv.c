@@ -107,12 +107,12 @@ static void synic_realize(DeviceState *dev, Error **errp)
     Object *obj = OBJECT(dev);
     SynICState *synic = SYNIC(dev);
     char *msgp_name, *eventp_name;
-    uint32_t vp_index;
+    uint32_t vcpu_id;
 
     /* memory region names have to be globally unique */
-    vp_index = hyperv_vp_index(synic->cs);
-    msgp_name = g_strdup_printf("synic-%u-msg-page", vp_index);
-    eventp_name = g_strdup_printf("synic-%u-event-page", vp_index);
+    vcpu_id = kvm_arch_vcpu_id(synic->cs);
+    msgp_name = g_strdup_printf("synic-%u-msg-page", vcpu_id);
+    eventp_name = g_strdup_printf("synic-%u-event-page", vcpu_id);
 
     memory_region_init_ram(&synic->msg_page_mr, obj, msgp_name,
                            sizeof(*synic->msg_page), &error_abort);
@@ -581,7 +581,8 @@ int hyperv_set_msg_handler(uint32_t conn_id, HvMsgHandler handler, void *data)
 
 static int get_active_vtl(CPUState *cpu)
 {
-    return cpu->cpu_index;
+    uint32_t apic_id = kvm_arch_vcpu_id(cpu);
+    return apic_id >> X86_APIC_ID_MASK_SHIFT;
 }
 
 struct VpVsmState {
@@ -1068,7 +1069,7 @@ static CPUState* hyperv_init_vtl_vcpu(CPUState *cpu, int32_t vp_index, unsigned 
 
     qemu_mutex_lock_iothread();
     //TODO Only works on UP
-    x86_cpu_new(x86ms, 1, &error_warn);
+    x86_cpu_new(x86ms, generate_apic_id(vp_index, vtl), &error_warn);
     qemu_mutex_unlock_iothread();
     new_cpu = hyperv_vsm_vcpu(vp_index, vtl);
     new_cpu->poll_callback = hyperv_poll_callback;
