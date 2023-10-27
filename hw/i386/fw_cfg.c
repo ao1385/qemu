@@ -138,7 +138,7 @@ FWCfgState *fw_cfg_arch_create(MachineState *ms,
     numa_fw_cfg = g_new0(uint64_t, 1 + apic_id_limit + nb_numa_nodes);
     numa_fw_cfg[0] = cpu_to_le64(nb_numa_nodes);
     for (i = 0; i < cpus->len; i++) {
-        unsigned int apic_id = cpus->cpus[i].arch_id;
+        unsigned int apic_id = apic_id_masked(cpus->cpus[i].arch_id);
         assert(apic_id < apic_id_limit);
         numa_fw_cfg[apic_id + 1] = cpu_to_le64(cpus->cpus[i].props.node_id);
     }

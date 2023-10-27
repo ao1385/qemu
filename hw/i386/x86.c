@@ -180,12 +180,22 @@ static int x86_apic_cmp(const void *a, const void *b)
  */
 CPUArchId *x86_find_cpu_slot(MachineState *ms, uint32_t id, int *idx)
 {
-    CPUArchId apic_id, *found_cpu;
+    CPUArchId apic_id, *found_cpu = NULL;
+    int i;
 
     apic_id.arch_id = id;
-    found_cpu = bsearch(&apic_id, ms->possible_cpus->cpus,
-        ms->possible_cpus->len, sizeof(*ms->possible_cpus->cpus),
-        x86_apic_cmp);
+//    found_cpu = bsearch(&apic_id, ms->possible_cpus->cpus,
+//        ms->possible_cpus->len, sizeof(*ms->possible_cpus->cpus),
+//        x86_apic_cmp);
+    /* TODO: APIC ids are no longer sorted; do linear search temporarily */
+
+    for (i = 0; i < ms->possible_cpus->len; i++) {
+        if (ms->possible_cpus->cpus[i].arch_id == id) {
+            found_cpu = &ms->possible_cpus->cpus[i];
+            break;
+        }
+    }
+
     if (found_cpu && idx) {
         *idx = found_cpu - ms->possible_cpus->cpus;
     }
@@ -365,7 +375,7 @@ void x86_cpu_pre_plug(HotplugHandler *hotplug_dev,
 
     cpu_slot = x86_find_cpu_slot(MACHINE(x86ms), cpu->apic_id, &idx);
     if (!cpu_slot) {
-        x86_topo_ids_from_apicid(cpu->apic_id, &topo_info, &topo_ids);
+        x86_topo_ids_from_apicid(apic_id_masked(cpu->apic_id), &topo_info, &topo_ids);
         error_setg(errp,
             "Invalid CPU [socket: %u, die: %u, core: %u, thread: %u] with"
             " APIC ID %" PRIu32 ", valid index range 0:%d",
@@ -481,9 +491,17 @@ const CPUArchIdList *x86_possible_cpu_arch_ids(MachineState *ms)
 
         ms->possible_cpus->cpus[i].type = ms->cpu_type;
         ms->possible_cpus->cpus[i].vcpus_count = 1;
-        ms->possible_cpus->cpus[i].arch_id =
-            x86_cpu_apic_id_from_index(x86ms, i);
-        x86_topo_ids_from_apicid(ms->possible_cpus->cpus[i].arch_id,
+
+		/* TODO: fix the hack properly */
+        if (i == 1 || i % 2) {
+            ms->possible_cpus->cpus[i].arch_id =
+                (i / 2) | (1 << X86_APIC_ID_MASK_SHIFT);
+            warn_report("APIC ID = %lu, masked = %lu", ms->possible_cpus->cpus[i].arch_id, apic_id_masked(ms->possible_cpus->cpus[i].arch_id));
+        } else {
+            ms->possible_cpus->cpus[i].arch_id = i / 2;
+            warn_report("APIC ID = %lu, masked = %lu", ms->possible_cpus->cpus[i].arch_id, apic_id_masked(ms->possible_cpus->cpus[i].arch_id));
+        }
+        x86_topo_ids_from_apicid(apic_id_masked(ms->possible_cpus->cpus[i].arch_id),
                                  &topo_info, &topo_ids);
         ms->possible_cpus->cpus[i].props.has_socket_id = true;
         ms->possible_cpus->cpus[i].props.socket_id = topo_ids.pkg_id;

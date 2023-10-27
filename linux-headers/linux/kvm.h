@@ -1213,6 +1213,7 @@ struct kvm_ppc_resize_hpt {
 #define KVM_CAP_ARM_EAGER_SPLIT_CHUNK_SIZE 228
 #define KVM_CAP_ARM_SUPPORTED_BLOCK_SIZES 229
 #define KVM_CAP_HYPERV_VSM 235
+#define KVM_CAP_APIC_ID_MASK 236
 
 #ifdef KVM_CAP_IRQ_ROUTING
 
@@ -2299,4 +2300,5 @@ struct kvm_memory_attributes {
 #define KVM_MEMORY_ATTRIBUTE_PRIVATE           (1ULL << 3)
 #define KVM_MEMORY_ATTRIBUTE_NO_ACCESS         (1ULL << 4)
 
+#define KVM_SET_APIC_ID_MASK _IOW(KVMIO, 0xd7, struct kvm_apic_id_mask)
 #endif /* __LINUX_KVM_H */

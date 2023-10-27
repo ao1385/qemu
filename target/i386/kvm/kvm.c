@@ -2806,6 +2806,16 @@ int kvm_arch_init(MachineState *ms, KVMState *s)
         }
     }
 
+    if (kvm_check_extension(s, KVM_CAP_APIC_ID_MASK)) {
+        struct kvm_apic_id_mask mask = {};
+        mask.width = X86_APIC_ID_MASK_WIDTH;
+        ret = kvm_vm_ioctl(s, KVM_SET_APIC_ID_MASK, &mask);
+        if (ret < 0) {
+            error_report("kvm: Failed to set APIC ID mask: %s", strerror(-ret));
+            return ret;
+        }
+	}
+
     return 0;
 }
 
