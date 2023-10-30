@@ -1313,6 +1313,11 @@ void hyperv_poll_callback(CPUState *vtl1, short int events)
 
 }
 
+void hyperv_vsm_reset(CPUState *cpu)
+{
+    printf("TODO!! VSM RESET\n");
+}
+
 static uint64_t get_vsm_code_page_offsets(CPUState *cs)
 {
     X86CPU *cpu = X86_CPU(cs);
