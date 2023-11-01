@@ -87,7 +87,7 @@ uint16_t hyperv_hcall_post_message(uint64_t param, bool fast);
 uint16_t hyperv_hcall_signal_event(uint64_t param, bool fast);
 
 /* TODO: Figure out correct header for these.*/
-#define X86_APIC_ID_MASK_WIDTH 4
+#define X86_APIC_ID_MASK_WIDTH 24
 #define X86_APIC_ID_MASK_SHIFT (32 - X86_APIC_ID_MASK_WIDTH)
 #define X86_APIC_ID_MASK  0xFFFFFFFF >> X86_APIC_ID_MASK_WIDTH
 

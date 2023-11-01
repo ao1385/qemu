@@ -2511,7 +2511,7 @@ static inline bool ctl_has_irq(CPUX86State *env)
 # define TARGET_VSYSCALL_PAGE  (UINT64_C(-10) << 20)
 #endif
 
-#define X86_APIC_ID_MASK_WIDTH 4
+#define X86_APIC_ID_MASK_WIDTH 24
 #define X86_APIC_ID_MASK_SHIFT (32 - X86_APIC_ID_MASK_WIDTH)
 #define X86_APIC_ID_MASK  0xFFFFFFFF >> X86_APIC_ID_MASK_WIDTH
 
